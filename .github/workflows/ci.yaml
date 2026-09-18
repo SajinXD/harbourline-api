@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-publish:
@@ -20,6 +19,10 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
+      - name: Lowercase image name
+        id: img
+        run: echo "name=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -43,7 +46,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.img.outputs.name }}
           tags: |
             type=sha,format=short
             type=raw,value=1.0.${{ github.run_number }}
@@ -60,10 +63,10 @@ jobs:
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:1.0.${{ github.run_number }}
+          image-ref: ${{ env.REGISTRY }}/${{ steps.img.outputs.name }}:1.0.${{ github.run_number }}
           format: 'table'
           severity: 'CRITICAL,HIGH'
           exit-code: '0'
 
       - name: Report image tag
-        run: echo "Published 1.0.${{ github.run_number }}"
+        run: echo "Published ${{ steps.img.outputs.name }}:1.0.${{ github.run_number }}"
