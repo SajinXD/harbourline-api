@@ -1,12 +1,12 @@
 # ---- Stage 1: build ----
-FROM node:20.11-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /build
 COPY package.json ./
 RUN npm install --omit=dev && npm cache clean --force
 COPY server.js test.js ./
 
 # ---- Stage 2: runtime ----
-FROM node:20.11-alpine AS runtime
+FROM node:22-alpine AS runtime
 ENV NODE_ENV=production
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
